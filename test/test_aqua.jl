@@ -12,6 +12,5 @@ Test.@testset "Aqua tests" begin
     Aqua.test_all(
         LazyReports,
         ambiguities = true,
-        stale_deps=(ignore=[:Requires],)
     )
 end # testset

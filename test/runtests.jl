@@ -5,5 +5,6 @@ import Test
 Test.@testset "Package LazyReports" begin
     include("test_aqua.jl")
     include("test_lazy_report.jl")
+    include("test_opaque_content.jl")
     include("test_docs.jl")
 end # testset

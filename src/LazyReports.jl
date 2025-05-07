@@ -14,5 +14,6 @@ using MIMEs: mime_from_extension
 
 include("adapt_to.jl")
 include("lazy_report.jl")
+include("opaque_content.jl")
 
 end # module

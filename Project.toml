@@ -1,6 +1,6 @@
 name = "LazyReports"
 uuid = "e5afb96c-f319-4582-8667-2a6c7d02249d"
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"

@@ -16,13 +16,13 @@ using LazyReports: LazyReport
 
 function LazyReports.lazyreport_for_show!(rpt::LazyReport, ::MIME"text/plain", @nospecialize(plt::Plot))
     pltbackend = Plots.UnicodePlotsBackend()
-    new_plt = LazyReports.adapt_to(pltbackend, plt)
+    new_plt = _adapt_plot(pltbackend, plt)
     LazyReports.lazyreport!(rpt, new_plt)
 end
 
-LazyReports.adapt_to(::B, plt::Plot{B}) where {B<:AbstractBackend} = plt
+_adapt_plot(::B, plt::Plot{B}) where {B<:AbstractBackend} = plt
 
-function LazyReports.adapt_to(pltbackend::B, plt::Plot) where  {B<:AbstractBackend}
+function _adapt_plot(pltbackend::B, plt::Plot) where  {B<:AbstractBackend}
     old_pltbackend = Plots.backend()
     try
         if pltbackend !== Plots.backend()
@@ -33,7 +33,7 @@ function LazyReports.adapt_to(pltbackend::B, plt::Plot) where  {B<:AbstractBacke
 
         spmap = plt.spmap
         inv_spmap = Dict([v => k for (k, v) in spmap])
-        new_spmap = Dict([k => LazyReports.adapt_to(new_plt, v) for (k, v) in spmap])
+        new_spmap = Dict([k => _adapt_plot(new_plt, v) for (k, v) in spmap])
         new_subplots = [new_spmap[inv_spmap[s]] for s in plt.subplots]
         new_inset_subplots = [new_spmap[inv_spmap[s]] for s in plt.inset_subplots]
 
@@ -55,9 +55,9 @@ function LazyReports.adapt_to(pltbackend::B, plt::Plot) where  {B<:AbstractBacke
     end
 end
 
-LazyReports.adapt_to(::Plot{B}, subplt::Subplot{B}) where  {B<:AbstractBackend} = subplt
+_adapt_plot(::Plot{B}, subplt::Subplot{B}) where  {B<:AbstractBackend} = subplt
 
-function LazyReports.adapt_to(parentplt::Plot{B}, subplt::Subplot) where  {B<:AbstractBackend}
+function _adapt_plot(parentplt::Plot{B}, subplt::Subplot) where  {B<:AbstractBackend}
     new_subplt = Subplot(parentplt.backend; parent = subplt.parent)
     new_subplt.series_list = subplt.series_list
     new_subplt.primary_series_count = subplt.primary_series_count

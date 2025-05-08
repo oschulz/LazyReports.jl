@@ -3,7 +3,7 @@
 using LazyReports
 using Test
 
-using StructArrays, IntervalSets, Plots
+using StructArrays, StatsBase, IntervalSets, Plots
 
 
 @testset "lazy_report" begin
@@ -13,12 +13,16 @@ using StructArrays, IntervalSets, Plots
         col1 = rand(5), col2 = ClosedInterval.(rand(5), rand(5).+1),
         col3 = [rand(3) for i in 1:5], col4 = rand(Bool, 5),
         col5 = [:a, :b, :c, :d, :e], col6 = ["a", "b", "c", "d", "e"],
-        col7 = [:(a[1]), :(a[2]), :(a[3]), :(a[4]), :(a[5])]
+        col7 = [:(a[1]), :(a[2]), :(a[3]), :(a[4]), :(a[5])],
+        col9 = [fit(Histogram, rand()^3 * 1000 * randn(10^4), nbins = 50) for i in 1:5],
     )
+
+    hist = fit(Histogram, randn(10^4), range(-4, 4, length = 100))
 
     rpt = lazyreport(
         "# New report",
-        "Table 1:", tbl
+        "Table 1:", tbl,
+        "Histogram 1", hist,
     )
     lazyreport!(rpt, "Figure 1:", stephist(randn(10^3)))
     new_rpt = lazyreport!(rpt, "Figure 2:", histogram2d(randn(10^4), randn(10^4), format = :png))

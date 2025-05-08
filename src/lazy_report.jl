@@ -15,67 +15,119 @@ end
 
 LazyReport() = LazyReport(Any[])
 
+
+function _show(@nospecialize(io::IO), mime, rpt::LazyReport)
+    for obj in rpt._contents
+        render_element(io, mime, obj)
+        println(io)
+    end
+end
+
 function Base.show(@nospecialize(io::IO), rpt::LazyReport)
-    show(io, MIME("text/plain"), rpt)
-
-    #for x in rpt._contents
-    #    show(io, x)
-    #    println(io)
-    #end
+    _show(io, MIME("text/plain"), rpt)
 end
 
+Base.showable(::MIME"text/plain", ::LazyReport) = true
+Base.show(@nospecialize(io::IO), mime::MIME"text/plain", rpt::LazyReport) = _show(io, mime, rpt)
 
-function Base.show(@nospecialize(io::IO), mime::MIME"text/plain", rpt::LazyReport)
-    r_conv = lazyreport_for_show!(lazyreport(), mime, rpt)
-    for x in r_conv._contents
-        _show_report_element_plain(io, x)
-        println(io)
-    end
-end
+Base.showable(::MIME"text/markdown", ::LazyReport) = true
+Base.show(@nospecialize(io::IO), mime::MIME"text/markdown", rpt::LazyReport) = _show(io, mime, rpt)
 
-function _show_report_element_plain(@nospecialize(io::IO), @nospecialize(x))
-    show(io, MIME("text/plain"), x)
-end
+Base.showable(::MIME"text/html", ::LazyReport) = true
+Base.show(@nospecialize(io::IO), mime::MIME"text/html", rpt::LazyReport) = _show(io, mime, rpt)
 
-
-function Base.show(@nospecialize(io::IO), mime::MIME"text/html", rpt::LazyReport)
-    r_conv = lazyreport_for_show!(lazyreport(), mime, rpt)
-    for x in r_conv._contents
-        _show_report_element_html(io, x)
-        println(io)
-    end
-end
-
-function _show_report_element_html(@nospecialize(io::IO), @nospecialize(x))
-    if showable(MIME("text/html"), x)
-        show(io, MIME("text/html"), x)
-    else
-        _show_report_element_plain(io, x)
-    end
-end
-
-
-function Base.show(@nospecialize(io::IO), mime::MIME"text/markdown", rpt::LazyReport)
-    r_conv = lazyreport_for_show!(lazyreport(), mime, rpt)
-    for x in r_conv._contents
-        _show_report_element_markdown(io, x)
-        #println(io)
-    end
-end
-
-function _show_report_element_markdown(@nospecialize(io::IO), @nospecialize(x))
-    if showable(MIME("text/markdown"), x)
-        show(io, MIME("text/markdown"), x)
-    else
-        _show_report_element_html(io, x)
-    end
-end
-
-
+Base.showable(::MIME"juliavscode/html", ::LazyReport) = true
 function Base.show(@nospecialize(io::IO), ::MIME"juliavscode/html", rpt::LazyReport)
     show(io, MIME("text/html"), rpt)
 end
 
+
+"""
+    LazyTable.render_element(io::IO, mime::MIME, obj::Any)
+
+Render `obj` for the given `mime` type to `io`.
+
+Defaults to `show(io, mime, obj)`, with `show(io, MIME("text/plain"), obj)`
+as a fallback if `showable(mime, obj) == false`.
+
+Should be specialized for specific combinations of MIME and object types if
+specialization of `Base.show` would be too broad.
+"""
+function render_element end
+
+function render_element(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj))
+    if Tables.istable(obj)
+        render_element(io, mime, lazytable(obj))
+    else
+        _render_element_impl(io, mime, obj)
+    end
+end
+
+function _render_element_impl(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj))
+    if showable(mime, obj)
+        show(io, mime, obj)
+    else
+        render_element(io, MIME("text/plain"), obj)
+    end
+end
+
+function _render_element_impl(@nospecialize(io::IO), ::MIME"text/plain", @nospecialize(obj))
+    show(io, MIME("text/plain"), obj)
+end
+
+
+"""
+    LazyTable.render_inline(io::IO, mime::MIME, obj::Any)
+
+Render `obj` as inline content for the given `mime` type to `io`.
+
+Defaults to [`render_element(io, mime, obj)`](@ref) and may be specialized for
+specific combinations of MIME and object types.
+"""
+function render_inline end
+
+function render_inline(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj))
+    if showable(mime, obj)
+        ioctx = IOContext(io, :compact => true)
+        show(ioctx, mime, obj)
+    else
+        render_inline(io, MIME("text/plain"), obj)
+    end
+end
+
+render_inline(@nospecialize(io::IO), ::MIME"text/plain", @nospecialize(obj::AbstractString)) = print(io, obj)
+
+function render_inline(@nospecialize(io::IO), ::MIME"text/plain", @nospecialize(A::AbstractArray))
+    ioctx = IOContext(io, :compact => true)
+    # show(ioctx, MIME("text/plain"), A::AbstractArray) produces multi-line
+    # output, so use
+    show(ioctx, A)
+end
+
+render_inline(@nospecialize(io::IO), ::MIME"text/plain", @nospecialize(obj::Symbol)) = print(io, obj)
+render_inline(@nospecialize(io::IO), ::MIME"text/plain", @nospecialize(obj::Expr)) = print(io, obj)
+
+render_inline(@nospecialize(io::IO), ::MIME"text/html", @nospecialize(obj::Symbol)) = _render_inline_code_to_html(io, obj)
+render_inline(@nospecialize(io::IO), ::MIME"text/html", @nospecialize(obj::Expr)) = _render_inline_code_to_html(io, obj)
+
+function _render_inline_code_to_html(@nospecialize(io::IO), @nospecialize(obj))
+    print(io, "<code>")
+    print(io, obj)
+    print(io, "</code>")
+end
+
+
+"""
+    LazyTable.render_intable(io::IO, mime::MIME, obj::Any)
+
+Render `obj` as table cell content for the given `mime` type to `io`.
+
+Defaults to [`render_inline(io, mime, obj)`](@ref) and may be specialized for
+specific combinations of MIME and object types.
+"""
+function render_intable end
+
+render_intable(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj)) = render_inline(io, mime, obj)
 
 
 """
@@ -114,9 +166,6 @@ write_lazyreport("report.txt", rpt)
 write_lazyreport("report.html", rpt)
 write_lazyreport("report.md", rpt)
 ```
-
-See [`LazyReports.lazyreport_for_show!`](@ref) for how to specialize the
-behavior of `show` for specific report content types.
 """
 function lazyreport end
 export lazyreport
@@ -169,76 +218,6 @@ end
 
 function lazyreport!(rpt::LazyReport, @nospecialize(markdown_str::AbstractString))
     lazyreport!(rpt, Markdown.parse(markdown_str))
-end
-
-#lazyreport!(rpt::LazyReport, @nospecialize(number::AbstractFloat)) = lazyreport!(rpt, string(round(number, digits=3)))
-#lazyreport!(rpt::LazyReport, @nospecialize(number::Unitful.Quantity{<:Real})) = lazyreport!(rpt, string(round(unit(number), number, digits=3)))
-
-
-"""
-    LazyReports.lazyreport_for_show!(rpt::LazyReport, mime::MIME, content)
-
-Add the contents of `content` to `rpt` in a way that is optimized for being
-displayed (e.g. via `show`) with the given `mime` type.
-
-`show(output, mime, rpt)` first transforms `rpt` by converting all contents of
-`rpt` using `lazyreport_for_show!(rpt::LazyReport, mime, content)`.
-
-Defaults to `lazyreport!(rpt, content)`, except for tables
-(`Tables.istable(content) == true`), which are converted to Markdown tables
-by default for uniform appearance.
-
-`lazyreport_for_show!` is not inteded to be called by users, but to be
-specialized for specific types of content `content`. Content types not already
-supported will primarily require specialization of
-
-```julia
-lazyreport_for_show!(rpt::LazyReport, ::MIME"text/markdown", content::SomeType)
-```
-
-In some cases it may be desireable to specialize `lazyreport_for_show!` for
-MIME types like `MIME"text/html"` and `MIME"text/plain"` as well.
-"""
-function lazyreport_for_show! end
-
-function lazyreport_for_show!(rpt::LazyReport, mime::MIME, content::LazyReport)
-    for c in content._contents
-        lazyreport_for_show!(rpt, mime, c)
-    end
-    return rpt
-end
-
-function lazyreport_for_show!(rpt::LazyReport, ::MIME, @nospecialize(content))
-    if Tables.istable(content)
-        lazyreport!(rpt, Markdown.MD(_markdown_table(content)))
-    else
-        lazyreport!(rpt, content)
-    end
-end
-
-_table_columnnames(tbl) = keys(Tables.columns(tbl))
-_default_table_headermap(tbl) = Dict(k => string(k) for k in _table_columnnames(tbl))
-
-_markdown_cell_content(@nospecialize(content)) = content
-_markdown_cell_content(@nospecialize(content::AbstractString)) = String(content)
-_markdown_cell_content(@nospecialize(content::Symbol)) = string(content)
-_markdown_cell_content(@nospecialize(content::Expr)) = string(content)
-_markdown_cell_content(@nospecialize(content::Number)) = _show_plain_compact(content)
-_markdown_cell_content(@nospecialize(content::Array)) = _show_plain_compact(content)
-
-
-_show_plain_compact(@nospecialize(content)) = sprint(show, content; context = :compact=>true)
-
-function _markdown_table(
-    tbl;
-    headermap::Dict{Symbol,<:AbstractString} = _default_table_headermap(tbl),
-    align::AbstractVector{Symbol} = fill(:l, length(Tables.columns(tbl)))
-)
-    content = Vector{Any}[Any[headermap[k] for k in keys(Tables.columns(tbl))]]
-    for rpt in Tables.rows(tbl)
-        push!(content, [_markdown_cell_content(content) for content in values(rpt)])
-    end
-    Markdown.Table(content, align)
 end
 
 

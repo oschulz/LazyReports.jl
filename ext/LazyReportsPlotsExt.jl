@@ -2,22 +2,17 @@
 
 module LazyReportsPlotsExt
 
-@static if isdefined(Base, :get_extension)
-    import Plots
-    using Plots: AbstractBackend, Plot, Subplot, SubplotMap
-
-else
-    import ..Plots
-    using ..Plots: AbstractBackend, Plot, Subplot, SubplotMap
-end
+import Plots
+using Plots: AbstractBackend, Plot, Subplot, SubplotMap
 
 import LazyReports
 using LazyReports: LazyReport
 
-function LazyReports.lazyreport_for_show!(rpt::LazyReport, ::MIME"text/plain", @nospecialize(plt::Plot))
+function LazyReports.render_element(@nospecialize(io::IO), mime::MIME"text/plain", @nospecialize(plt::Plot))
     pltbackend = Plots.UnicodePlotsBackend()
     new_plt = _adapt_plot(pltbackend, plt)
-    LazyReports.lazyreport!(rpt, new_plt)
+    show(io, mime, new_plt)
+    println(io)
 end
 
 _adapt_plot(::B, plt::Plot{B}) where {B<:AbstractBackend} = plt

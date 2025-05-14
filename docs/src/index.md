@@ -1,12 +1,12 @@
 # LazyReports.jl
 
-LazyReports provides report generation with minimal dependencies, depending on LazyReports should have minimal load-time impact for Julia packages. Reports are a mixture and data objects, and are lazy in the sense that they are both easy to create and that contents are only rendered when the reports is displayed to written to a file. This way, reports can be generated as part of algorithms and workflows with only a small runtime overhead.
+LazyReports provides report generation with minimal dependencies; thus, depending on LazyReports should have minimal load-time impact for Julia packages. Reports are a mixture of text and data objects, and are lazy in the sense that they are easy to create and their contents are only rendered when the report is displayed or written to a file. This way, reports can be generated as part of algorithms and workflows with only a small runtime overhead.
 
-The central function of the package is [`lazyreport`](@ref), it generates a report object that can be rendered (via `show` and `display`) with different MIME types. [`lazyreport`](@ref) allows for appending content to reports.
+The central function of the package is [`lazyreport`](@ref). It generates a report object that can be rendered (via `show` and `display`) in different MIME types. [`lazyreport`](@ref) allows for appending content to reports.
 
-Reports should be displayed automatically on the REPL (as far as supported by the objects in the reports), in Jupyter and Pluto notebooks and in Visual Studio Code (when using the Julia extension). Reports can also be written to files using [`write_lazyreport`](@ref).
+Reports are displayed automatically in the REPL (as far as supported by the report objects), in Jupyter and Pluto notebooks, and in Visual Studio Code (when using the Julia extension). Reports can also be written to files using [`write_lazyreport`](@ref).
 
-In addition to types that can be shown in the MIME type of the current Julia display anyway, LazyReports (so far) has special support for `StatsBase.Histogram` (one-dimensional).
+In addition to the types the current Julia display supports, LazyReports also has special support for `StatsBase.Histogram` (one-dimensional only).
 
 For example:
 
@@ -32,8 +32,7 @@ The lower-level function [`LazyReports.pushcontent!`](@ref) can be specialized t
 
 ## Lazy tables
 
-[`lazytable`](@ref) allows to wrap [Tables](https://github.com/JuliaData/Tables.jl)-compatible object and add custom column labels.
-
+[`lazytable`](@ref) wraps/converts Tables.jl-compatible objects and allows for adding custom column labels.
 
 ```@example rptexample
 using IntervalSets

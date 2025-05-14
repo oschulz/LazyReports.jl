@@ -169,7 +169,7 @@ write_lazyreport("report.md", rpt)
 
 # Implementation
 
-Do not specilialize `lazyreport` directly, specialize the lower-level function
+Do not specialize `lazyreport` directly, specialize the lower-level function
 [`LazyReports.pushcontent!`](@ref) instead.
 """
 function lazyreport end
@@ -214,7 +214,7 @@ Lower-level function to add a single object to report `rpt`.
 Users should call [`lazyreport!(rpt, obj)`](@ref) instead, but should
 specialize `LazyReports.pushcontent!(rpt::LazyReport, obj::MyType)`
 to control how objects of specific types are added to reports (e.g. by
-converting them to Markdown, tables or other content types first.
+converting them to Markdown, tables, or other content types first).
 
 The return value of `pushcontent!` is undefined and should be ignored.
 
@@ -222,7 +222,7 @@ The return value of `pushcontent!` is undefined and should be ignored.
 
 Specialized methods of `pushcontent!` that convert `obj` to types already
 supported by `LazyReport` should preferably call `lazyreport!` internally
-instead of call `pushcontent!` again directly.
+instead of calling `pushcontent!` again directly.
 """
 function pushcontent! end
 

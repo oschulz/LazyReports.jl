@@ -4,7 +4,7 @@
 """
     struct OpaqueContent
 
-Represents opaque content of a specific MIME type.
+Represents opaque content with a specific MIME type.
 
 Constructors:
 

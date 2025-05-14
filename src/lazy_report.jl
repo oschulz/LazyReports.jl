@@ -166,6 +166,11 @@ write_lazyreport("report.txt", rpt)
 write_lazyreport("report.html", rpt)
 write_lazyreport("report.md", rpt)
 ```
+
+# Implementation
+
+Do not specilialize `lazyreport` directly, specialize the lower-level function
+[`LazyReports.pushcontent!`](@ref) instead.
 """
 function lazyreport end
 export lazyreport
@@ -185,25 +190,50 @@ end
     lazyreport!(rpt::LazyReport, contents...)
 
 Add more content to report `rpt`. See [`lazyreport`](@ref) for an example.
+
+# Implementation
+
+Do not specialize `lazyreport!(rpt::LazyReport, obj::MyType)` directly,
+specialize the lower-level function [`LazyReports.pushcontent!`](@ref)
+instead.
 """
-function lazyreport! end
-export lazyreport!
-
-
-function lazyreport!(rpt::LazyReport, @nospecialize(content))
-    push!(rpt._contents, content)
-    return rpt
-end
-
 function lazyreport!(rpt::LazyReport, @nospecialize(contents...))
     for content in contents
-        lazyreport!(rpt, content)
+        pushcontent!(rpt, content)
     end
     return rpt
 end
+export lazyreport!
 
 
-function lazyreport!(rpt::LazyReport, content::Markdown.MD)
+"""
+    LazyReports.pushcontent!(rpt::LazyReport, obj)
+
+Lower-level function to add a single object to report `rpt`.
+
+Users should call [`lazyreport!(rpt, obj)`](@ref) instead, but should
+specialize `LazyReports.pushcontent!(rpt::LazyReport, obj::MyType)`
+to control how objects of specific types are added to reports (e.g. by
+converting them to Markdown, tables or other content types first.
+
+The return value of `pushcontent!` is undefined and should be ignored.
+
+# Implementation
+
+Specialized methods of `pushcontent!` that convert `obj` to types already
+supported by `LazyReport` should preferably call `lazyreport!` internally
+instead of call `pushcontent!` again directly.
+"""
+function pushcontent! end
+
+function pushcontent!(rpt::LazyReport, @nospecialize(obj))
+    push!(rpt._contents, obj)
+    return rpt
+end
+
+
+
+function pushcontent!(rpt::LazyReport, content::Markdown.MD)
     # Need to make a copy here to prevent recursive self-modification during
     # show-transformation:
     content_content_copy = copy(content.content)
@@ -213,11 +243,11 @@ function lazyreport!(rpt::LazyReport, content::Markdown.MD)
     else
         append!(rpt._contents[end].content, content_content_copy)
     end
-    return rpt
+    return nothing
 end
 
-function lazyreport!(rpt::LazyReport, @nospecialize(markdown_str::AbstractString))
-    lazyreport!(rpt, Markdown.parse(markdown_str))
+function pushcontent!(rpt::LazyReport, @nospecialize(markdown_str::AbstractString))
+    pushcontent!(rpt, Markdown.parse(markdown_str))
 end
 
 

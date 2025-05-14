@@ -28,6 +28,8 @@ lazyreport!(rpt, "Figure 1:", stephist(randn(10^3)))
 lazyreport!(rpt, "Figure 2:", histogram2d(randn(10^4), randn(10^4), format = :png))
 ```
 
+The lower-level function [`LazyReports.pushcontent!`](@ref) can be specialized to control how objects of specific types are added to reports (e.g. by converting them to Markdown, tables or supported content types first).
+
 ## Lazy tables
 
 [`lazytable`](@ref) allows to wrap [Tables](https://github.com/JuliaData/Tables.jl)-compatible object and add custom column labels.

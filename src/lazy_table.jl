@@ -95,7 +95,8 @@ end
 """
     lazytable(tbl; headers = missing)
 
-Wrap `tbl` as a `LazyTable` to be used with [`lazyreport`](@ref).
+Wrap/convert a Tables.jl-compatible `tbl` an return a `LazyTable`, for use
+with [`lazyreport`](@ref).
 
 If `headers` is `missing`, default headers are generated from the column
 names of `tbl`. If `headers` is an `AbstractDict`, the default column

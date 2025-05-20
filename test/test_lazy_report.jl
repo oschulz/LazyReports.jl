@@ -9,6 +9,8 @@ using StructArrays, StatsBase, IntervalSets, Plots
 @testset "lazy_report" begin
     @test lazyreport() isa LazyReports.LazyReport
 
+    @test lazyreport("Hello", nothing, missing, "World!") == lazyreport("Hello", "World!")
+
     tbl = StructArray(
         col1 = rand(5), col2 = ClosedInterval.(rand(5), rand(5).+1),
         col3 = [rand(3) for i in 1:5], col4 = rand(Bool, 5),

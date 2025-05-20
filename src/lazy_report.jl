@@ -16,6 +16,10 @@ end
 LazyReport() = LazyReport(Any[])
 
 
+Base.:(==)(a::LazyReport, b::LazyReport) = a._contents == b._contents
+Base.isequal(a::LazyReport, b::LazyReport) = isequal(a._contents, b._contents)
+
+
 function _show(@nospecialize(io::IO), mime, rpt::LazyReport)
     for obj in rpt._contents
         render_element(io, mime, obj)
@@ -231,6 +235,8 @@ function pushcontent!(rpt::LazyReport, @nospecialize(obj))
     return rpt
 end
 
+pushcontent!(rpt::LazyReport, ::Nothing) = rpt
+pushcontent!(rpt::LazyReport, ::Missing) = rpt
 
 
 function pushcontent!(rpt::LazyReport, content::Markdown.MD)

@@ -7,5 +7,6 @@ Test.@testset "Package LazyReports" begin
     include("test_lazy_table.jl")
     include("test_lazy_report.jl")
     include("test_opaque_content.jl")
+    include("test_typstry.jl")
     include("test_docs.jl")
 end # testset

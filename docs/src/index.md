@@ -6,12 +6,12 @@ The central function of the package is [`lazyreport`](@ref). It generates a repo
 
 Reports are displayed automatically in the REPL (as far as supported by the report objects), in Jupyter and Pluto notebooks, and in Visual Studio Code (when using the Julia extension). Reports can also be written to files using [`write_lazyreport`](@ref).
 
-In addition to the types the current Julia display supports, LazyReports also has special support for `StatsBase.Histogram` (one-dimensional only).
+Any objects that can render to the current Julia display (resp. the chosen output MIME-type) should work fine, including [Plots.jl](https://github.com/JuliaPlots/Plots.jl) and [Makie.jl](https://github.com/MakieOrg/Makie.jl) plots, and so on. In addition, LazyReports also has special out-of-the-box support for `StatsBase.Histogram` (one-dimensional only).
 
 For example:
 
 ```@example rptexample
-using LazyReports, StructArrays, StatsBase, Plots
+using LazyReports, StructArrays, StatsBase, Markdown, Typstry, Plots
 
 tbl = StructArray(
     col1 = rand(5),
@@ -22,7 +22,11 @@ tbl = StructArray(
 
 rpt = lazyreport(
     "# New report",
-    "Table 1:", tbl
+    "Table 1:", tbl,
+    "Markdown math:",
+    md"$\sum_{i=1}^n x_i$",
+    "Typst math (via [Typstry](https://github.com/jakobjpeters/Typstry.jl)):",
+    typst"$sum_(i=1)^n x_i$"
 )
 lazyreport!(rpt, "Figure 1:", stephist(randn(10^3)))
 lazyreport!(rpt, "Figure 2:", histogram2d(randn(10^4), randn(10^4), format = :png))

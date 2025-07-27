@@ -5,6 +5,7 @@ Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+Typstry = "f0ed7684-a786-439e-b1e3-3b82803b501e"
 UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [compat]

@@ -68,10 +68,11 @@ function render_element(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospe
 end
 
 function _render_element_impl(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj))
-    if showable(mime, obj)
-        show(io, mime, obj)
+    new_mime, new_obj = _map_mime_obj(mime, obj)
+    if showable(new_mime, new_obj)
+        show(io, new_mime, new_obj)
     else
-        render_element(io, MIME("text/plain"), obj)
+        render_element(io, MIME("text/plain"), new_obj)
     end
 end
 
@@ -91,11 +92,12 @@ specific combinations of MIME and object types.
 function render_inline end
 
 function render_inline(@nospecialize(io::IO), @nospecialize(mime::MIME), @nospecialize(obj))
-    if showable(mime, obj)
+    new_mime, new_obj = _map_mime_obj(mime, obj)
+    if showable(new_mime, new_obj)
         ioctx = IOContext(io, :compact => true)
-        show(ioctx, mime, obj)
+        show(ioctx, new_mime, new_obj)
     else
-        render_inline(io, MIME("text/plain"), obj)
+        render_inline(io, MIME("text/plain"), new_obj)
     end
 end
 
@@ -118,6 +120,19 @@ function _render_inline_code_to_html(@nospecialize(io::IO), @nospecialize(obj))
     print(io, "<code>")
     print(io, obj)
     print(io, "</code>")
+end
+
+
+_map_mime_obj(@nospecialize(mime::MIME), @nospecialize(obj)) = (mime, obj)
+
+function _map_mime_obj(mime::MIME"text/html", @nospecialize(obj))
+    r = if showable(mime, obj)
+        return mime, obj
+    elseif showable(MIME("image/svg+xml"), obj)
+        return MIME("image/svg+xml"), obj
+    else
+        return mime, obj
+    end
 end
 
 
